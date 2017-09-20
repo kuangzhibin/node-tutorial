@@ -239,6 +239,12 @@ const error = async (ctx, next) => {
 
 以上是本章关于koa中间件的一些基本介绍和使用。
 
+相关参考：
+
+
+- [深入掌握 ECMAScript 6 异步编程](http://www.ruanyifeng.com/blog/2015/04/generator.html)
+- [The Basics Of ES6 Generators](https://davidwalsh.name/es6-generators)
+
 
 
 
