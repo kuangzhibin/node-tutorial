@@ -1,37 +1,38 @@
 # Middleware 中间件(koa)
 
 从koa的源码中不难看出之所以koa的代码简单灵活正是因为在中间件这块的扩展性。接下来将详细的介绍下koa中的middleware的原理和使用，
-都知道的是koa1和koa2中中间件还是有区别的(当然在koa2中用 generator会自动转换同时给出warn)，下面简单的说下koa1 和 koa2的middleware
+都知道的是 koa1 和 koa2 的中间件还是有区别的(当然在koa2 中用 generator 会自动转换同时给出 warn )，下面简单的说下 koa1 和 koa2 的 middleware.
 
 
-## koa v1中middleware
+## koa1 middleware
 
-> koa1的中间件的使用的是generator函数，
+> koa1的中间件的使用的是generator函数.
 
 ### generator简单回顾
 
-那么再来回顾下generator相关的知识点，相关API见[generator(MDN)](hhttps://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator)，这里主要说下next的使用
+那么再来回顾下generator相关的知识点，相关API见[generator(MDN)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator)，这里简单的介绍下next的使用:
 
 ```
-function *foo() {
+function* foo() {
   yield 'a';
   yield 'b';
 }
 
 var f = foo();
-console.log(f.next())       // log: { value: 'a', done: false}
-console.log(f.next())       // log: { value: 'b', done: false}
+console.log(f.next())       // log: { value: "a", done: false}
+console.log(f.next())       // log: { value: "b", done: false}
 console.log(f.next())       // log: { value: undefined, done: true}
 console.log(f.next())       // log: { value: undefined, done: true}
 ```
 
-generator在执行了next后将返回 obj,如上代码，value 表示第一次要返回的值，done标示这个迭代函数是否把要返回的内容都执行完成,从上面的运行结果明显的看出 当执行完成后即done:true, 后面执行多少次的next 返回值都只会变成undefined。 也许会有疑问为什么 f = foo() 这个没有立即执行？
+也许会有疑问为什么 f = foo() 这个没有立即执行返回结果是什么？ 这段代码其实是执行了只是返回的是一个 generator 对象, 当在执行了next之后 函数将执行到下一个yield表达式,并返回表达式对应的值 如上代码log: value
+表示第一次要返回的值，done标示这个迭代函数是否把要返回的内容都执行完成,从上面的运行结果明显的看出 当执行完成后即 done:true, 后面执行多少次的next 返回值都只会变成undefined. generator函数 VS 普通的函数的最大区别在于:普通函数是将函数内表达式都执行完结束，而 generator函数则是 执行 -> 等待 -> 执行 ... -> 完成.
 
 上面的栗子只是为了看下next的执行结果，传入参数后的情况如何？
 
 ```
 // 改造上面的代码
-function *foo(){
+function* foo(){
   var m = yield 1
   yield m * m
 }
@@ -50,7 +51,7 @@ console.log(f.next())       // log: { value: undefined, done: true}
 var m = yield 1
 ```
 
-不是把值赋值给了m么？首先这个点解释下这个误区(最开始也遇到了)，每一个yield都会暂停函数的执行一直等到对应的next()执行后才会走到下一个yield的点(或结束)，那么我们来翻译下 刚刚的foo的代码(babel在线转换, 不能直接执行)：
+不是把值赋值给了m么？首先这个点解释下这个误区(最开始也遇到了)，每一个yield都会暂停函数的执行一直等到对应的next()执行后才会走到下一个yield的点(或结束)，那么我们来翻译下 刚刚的foo的代码([Regenerator生成器(fb)](https://facebook.github.io/regenerator/)在线转换：
 
 ```
 "use strict";
@@ -80,13 +81,32 @@ function foo() {
 }
 ```
 
-直接看核心的部分 m实际的赋值是_context.sent 也就是next(2)。 所以到这里 next的基本使用也已经了解。其他相关见[generator(MDN)](hhttps://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator)。
+按照从上到下的代码，先看regeneratorRuntime.mark 的代码如下图：
+
+<img src="https://n1image.hjfile.cn/res7/2017/09/21/aa18db3ace23bb04111e5839b0db1b00.png">
+
+此时foo被包裹后返回的结果(即_marked)如下图：
+
+<img src="https://n1image.hjfile.cn/res7/2017/09/21/496966bb4b77e78253bf07cdccd6b417.png">
+
+那么我们在执行 var f = foo(); 通过regeneratorRuntime.wrap(具体代码可以到链接地址中看) 会通过闭包维护一个_context的上下文，当每次执行next时，会进入switch case 执行过程如下：
+
+```
+case 0 -> _context.next = 2 && { return 1 } -> while -> case 2 -> m = send(接收到的值2) -> _context.next = 5 && return 4(m * m) -> while -> end
+```
+
+到这里 next 的基本使用也已经了解。其他详细相关参考[generator(MDN)](hhttps://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator)。
 
 ### 编译过程
 
 直接来一发核心部分的代码,主要还是在处理middleware上
 
 ```
+app.listen = function(){
+  var server = http.createServer(this.callback());
+  return server.listen.apply(server, arguments);
+};
+
 app.callback = function(){
   if (this.experimental) {
     console.error('Experimental ES7 Async Function support is deprecated. Please look into Koa v2 as the middleware signature has changed.')
@@ -99,9 +119,9 @@ app.callback = function(){
 }
 ```
 
-这里和koa2的区别在于 middleware的装换的过程，具体可以看下[co](https://github.com/tj/co)，核心思想把generator函数 ->promise 这里就不过多的叙述。
+这里和koa2的区别在于 middleware的转换过程，具体可以看下[co](https://github.com/tj/co)，核心思想把generator函数 ->promise 这里就不过多的叙述。
 
-## koa2中middleware
+## koa2 middleware
 
 > koa2中引入了async await, 所以中间件的写法上有了改变，但是实现的思想上并没有变，下面只对koa2的中间件的加载和执行做下分析。
 
@@ -140,7 +160,7 @@ const app = new Koa()
 
 // 记录执行的时间
 app.use(async (ctx, next)=>{
-  let stime = new Date().getTIme()
+  let stime = new Date().getTime()
   await next()
   let etime = new Date().getTIme()
   console.log(`${ctx.path} start: ${stime} end:${etime} loading:${etime - stime}`)
