@@ -25,8 +25,8 @@ console.log(f.next())       // log: { value: undefined, done: true}
 console.log(f.next())       // log: { value: undefined, done: true}
 ```
 
-也许会有疑问为什么 f = foo() 这个表达式没有立即执行? 返回结果是什么？ 这段代码其实是执行了,只是返回的是一个 generator 对象, 当在执行了next之后 函数将执行到下一个[yield表达式](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield), 并返回表达式对应的值,如上代码log: value
-表示第一次要返回的值，done标示这个迭代函数是否把要返回的内容都执行完成, 从上面的运行结果明显的看出 当执行完成后即 done:true, 后面执行多少次的next 返回值都只会变成undefined. generator函数 VS 普通的函数的最大区别在于:普通函数是将函数内表达式都执行完结束，而 generator函数则是 执行 -> 等待 -> 执行 ... -> 完成。
+也许会有疑问为什么 f = foo() 这个表达式没有立即执行? 返回结果是什么？ 这段代码其实是执行了,只是返回的是一个 generator 对象, 当在执行了 next 之后 函数将执行到下一个[yield表达式](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield), 并返回表达式对应的值,如上代码log: value
+表示第一次要返回的值，done 标示这个迭代函数是否把要返回的内容都执行完成, 从上面的运行结果明显的看出 当执行完成后即 done:true, 后面执行多少次的 next 返回值都只会变成undefined。generator 函数 VS 普通的函数的最大区别在于:普通函数是将函数内表达式都执行完结束，而 generator函数则是 执行 -> 等待 -> 执行 ... -> 完成。
 
 上面的栗子只是为了看下next的执行结果，传入参数后的情况如何？
 
@@ -83,11 +83,11 @@ function foo() {
 
 按照从上到下的代码，先看regeneratorRuntime.mark 的代码如下图：
 
-<img src="https://n1image.hjfile.cn/res7/2017/09/21/aa18db3ace23bb04111e5839b0db1b00.png" style="width: 70%;">
+<img src="https://n1image.hjfile.cn/res7/2017/09/21/aa18db3ace23bb04111e5839b0db1b00.png" style="width:60%;">
 
 此时foo被包裹后返回的结果(即_marked)如下图：
 
-<img src="https://n1image.hjfile.cn/res7/2017/09/21/496966bb4b77e78253bf07cdccd6b417.png"  style="width: 70%;">
+<img src="https://n1image.hjfile.cn/res7/2017/09/21/496966bb4b77e78253bf07cdccd6b417.png"  style="width:60%;">
 
 那么我们在执行 var f = foo(); 通过regeneratorRuntime.wrap(具体代码可以到链接地址中看) 会通过闭包维护一个_context的上下文，当每次执行next时，会进入switch case 执行过程如下：
 
@@ -190,9 +190,9 @@ app.listen(3000, () => {
 
 ```
 
-先curl 看下结果如下图:
+先 curl 看下结果如下图:
 
-<img src="https://n1image.hjfile.cn/res7/2017/08/30/89212325e2fcbcafb85354cb489e8c06.png">
+<img src="https://n1image.hjfile.cn/res7/2017/08/30/89212325e2fcbcafb85354cb489e8c06.png" style="width: 60%;">
 
 我们来分析下这段代码的整个过程
 
@@ -200,11 +200,11 @@ app.listen(3000, () => {
 
 按照代码顺序依次保存中间件
 
-<img src="https://n1image.hjfile.cn/res7/2017/08/30/6b652e8f8c6884d3a46171940d72104e.png">
+<img src="https://n1image.hjfile.cn/res7/2017/08/30/6b652e8f8c6884d3a46171940d72104e.png" style="width: 60%;">
 
 中间件转换过程 compose
 
-<img src="https://n1image.hjfile.cn/res7/2017/08/30/3360d24043052de921aff72d5f1bcec1.png">
+<img src="https://n1image.hjfile.cn/res7/2017/08/30/3360d24043052de921aff72d5f1bcec1.png" style="width: 60%;">
 
 上文代码中next的变量是从哪里传入的可能是个疑惑, 从上图中可以看到compose递归加载了所有的中间件，next函数return dispath(idx)
 一直递归到直到 idx === middleware.length。所以说所有的middleware 最终会返回一个fn(Promise)和前文的koa1通过co.warp 转换generator的思路是一致的，Promise 内部 return 下一个中间件的promise对象。说起来有点绕，接着看下面的执行原理
@@ -213,7 +213,7 @@ app.listen(3000, () => {
 
 接着上面的一个中间件的转换过程，画了一个草图如下：
 
-<img src="https://n1image.hjfile.cn/res7/2017/08/30/48b95711aa018e95f5269c42a947580a.png">
+<img src="https://n1image.hjfile.cn/res7/2017/08/30/48b95711aa018e95f5269c42a947580a.png" style="width: 60%;">
 
 当一个请求发起 按照 图示中的箭头方向 begin -> end 一个完整的请求结束。中间件的执行顺序是不是很好理解了？
 
