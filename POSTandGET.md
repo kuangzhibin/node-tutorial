@@ -6,7 +6,7 @@
 
 ## 捕获 GET 请求
 
-我们先来看下捕获GET请求，最基础的写法。
+我们先来看下捕获 GET 请求，最基础的写法。
 
 ```js
 route.get('/', ( ctx )=>{
@@ -24,16 +24,16 @@ route.get('/home', ( ctx )=>{
 
 既然我们可以捕获到 GET 的请求，那么我们就需要获取到 GET 请求所带的数据。众所周知，GET 请求的数据一般都是放在 URL 上的。
 
-request 对象中的 query 方法或 querystring 方法可以直接获取到GET请求的数据，唯一不同的是 query 返回是对象，而 querystring 返回的是字符串，其实因为上下文 ctx 自身也引用了 request 的 API，所以也能通过 ctx 来获取 GET 的数据。
+request 对象中的 query 方法或 querystring 方法可以直接获取到GET请求的数据，唯一不同的是 query 返回是对象，而 querystring 返回的是字符串。其实因为上下文 ctx 自身也引用了 request 的 API，所以也能通过 ctx 来获取 GET 的数据。
 
 ```js
 // 假设请求的url为： http://xxxxxxxx.com/home?id=10&sort=hot
 route.get('/home', ( ctx )=>{
-  // 从上下文的request对象中获取
+  // 方法 1 ：从上下文的request对象中获取
   const request = ctx.request
   let req_query = request.query  // req_query : {id:10,sort:hot}
   let req_querystring = request.querystring  // req_querystring : id=10&sort=hot
-  // 从上下文中直接获取
+  // 方法 2 ：从上下文中直接获取
   let ctx_query = ctx.query     // ctx_query : {id:10,sort:hot}
   let ctx_querystring = ctx.querystring     //  ctx_querystring : id=10&sort=hot
 
@@ -60,7 +60,8 @@ route.post('/post', ( ctx )=>{
 ```js
 route.post('/post', ( ctx )=>{
   let postData = "";
-  ctx.req.on('data', (data) => {
+  // 这里的 ctx.req 是 Node 的 request 对象。
+  ctx.req.on('data', (data) => {
       // 这里的data是buffer流 例如：<Buffer 69 64 3d 31 30 26 73 6f 72 74 3d 68 6f 74>
       postData += data
   })
@@ -77,7 +78,9 @@ route.post('/post', ( ctx )=>{
 
 这里有个坑，就是 ctx.req.on 方法是异步的，故 ctx.body 并不会等待 post 的数据处理，所以这里我们还需要用控制异步流的方法，来让流程符合我们的预期。
 
-现阶段最好的解决方案就是 async/await。我们抽离出数据的处理过程，到一个用Promise包装的方法里：
+> request 对象具体的资料可以看 [Node 的文档](https://nodejs.org/api/http.html#http_class_http_clientrequest)
+
+现阶段最好的解决方案就是 async/await。我们抽离出数据的处理过程，到一个用 Promise 包装的方法里：
 
 ```js
 // 把回调改成 async 回调
@@ -103,7 +106,7 @@ function handleData(ctx) {
 ```
 ## 使用 koa-bodyparser 简化数据处理过程
 
-其实， POST 请求带的数据有许多种类型，比如说还有文件流，所以自己一个一个来实现是很没有效率的一件事。这时候就是 koa-bodyparser 登场的机会了。
+其实， POST 请求带的数据有许多种类型，比如说还有文件流，所以自己一个一个来实现是很没有效率的一件事。这时候就是 [koa-bodyparser](https://github.com/koajs/bodyparser) 登场的机会了。
 
 koa-bodyparser 中间件的作用就是把 POST 的数据解析到 ctx.request.body 中，即取即用。
 
