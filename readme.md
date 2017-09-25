@@ -192,7 +192,7 @@ app.listen(3000, () => {
 
 先 curl 看下结果如下图:
 
-<img src="https://n1image.hjfile.cn/res7/2017/08/30/89212325e2fcbcafb85354cb489e8c06.png" style="width: 60%;">
+<img src="https://n1image.hjfile.cn/res7/2017/08/30/89212325e2fcbcafb85354cb489e8c06.png" width="60%">
 
 我们来分析下这段代码的整个过程
 
@@ -200,11 +200,11 @@ app.listen(3000, () => {
 
 按照代码顺序依次保存中间件
 
-<img src="https://n1image.hjfile.cn/res7/2017/08/30/6b652e8f8c6884d3a46171940d72104e.png" style="width: 60%;">
+<img src="https://n1image.hjfile.cn/res7/2017/08/30/6b652e8f8c6884d3a46171940d72104e.png" width="60%">
 
 中间件转换过程 compose
 
-<img src="https://n1image.hjfile.cn/res7/2017/08/30/3360d24043052de921aff72d5f1bcec1.png" style="width: 60%;">
+<img src="https://n1image.hjfile.cn/res7/2017/08/30/3360d24043052de921aff72d5f1bcec1.png" width="60%">
 
 上文代码中next的变量是从哪里传入的可能是个疑惑, 从上图中可以看到compose递归加载了所有的中间件，next函数return dispath(idx)
 一直递归到直到 idx === middleware.length。所以说所有的middleware 最终会返回一个fn(Promise)和前文的koa1通过co.warp 转换generator的思路是一致的，Promise 内部 return 下一个中间件的promise对象。说起来有点绕，接着看下面的执行原理
@@ -213,7 +213,7 @@ app.listen(3000, () => {
 
 接着上面的一个中间件的转换过程，画了一个草图如下：
 
-<img src="https://n1image.hjfile.cn/res7/2017/08/30/48b95711aa018e95f5269c42a947580a.png" style="width: 60%;">
+<img src="https://n1image.hjfile.cn/res7/2017/08/30/48b95711aa018e95f5269c42a947580a.png" width="60%">
 
 当一个请求发起 按照 图示中的箭头方向 begin -> end 一个完整的请求结束。中间件的执行顺序是不是很好理解了？
 
